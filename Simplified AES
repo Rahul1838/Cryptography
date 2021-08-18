@@ -1,0 +1,370 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+int k1[20],k2[20],k3[20],t[10],Cipher[20];
+
+void Subnib(int f)
+{
+    int n1=0,n2=0,i,j=0,Sbox[16]={9,4,10,11,13,1,8,5,6,2,0,3,12,14,15,7};
+    char str[10];
+
+    for(i=3;i>=0;i--)
+        n1+=t[j++]*pow(2,i);
+    for(i=3;i>=0;i--)
+        n2+=t[j++]*pow(2,i);
+
+    if(f==0)
+        itoa(Sbox[n1],str,2);
+    else
+    {
+        for(i=0;i<16;i++)
+            if(Sbox[i]==n1)
+                break;
+        itoa(i,str,2);
+    }
+
+    for(i=0;i<8;i++)
+        t[i]=0;
+    j=3;
+    for(i=strlen(str)-1;i>=0;i--)
+        t[j--]=int(str[i]-48);
+    if(f==0)
+        itoa(Sbox[n2],str,2);
+    else
+    {
+        for(i=0;i<16;i++)
+            {if(Sbox[i]==n2)
+                break;}
+        itoa(i,str,2);
+
+    }
+
+    j=7;
+    for(i=strlen(str)-1;i>=0;i--)
+        t[j--]=int(str[i]-48);
+}
+
+int convert()
+{
+    int n=0,j=0;
+    for(int i=3;i>=0;i--)
+        n+=t[j++]*pow(2,i);
+    return n;
+}
+
+void Mix_column_multi(int A[10],int f)
+{
+    int i,j=0,n,t1[10],t2[10],multi[20][3]={ {0,0,0}, {2,4,9}, {4,8,1}, {6,12,8}, {8,3,2}, {10,7,11}, {12,11,3,}, {14,15,10}, {3,6,4}, {1,2,13}, {7,14,5},
+                                            {5,10,12}, {11,5,6}, {9,1,15}, {15,13,7}, {13,9,14}};
+    char str[10];
+
+    for(i=0;i<4;i++)
+        {t1[i]=0; t2[i]=0;}
+    n=convert();
+    if(f==0)
+    {
+        itoa(multi[n][1],str,2);
+        j=3;
+        for(i=strlen(str)-1;i>=0;i--)
+            t1[j--]=int(str[i]-48);
+        for(i=0;i<4;i++)
+            t2[i]=A[i];
+    }
+    else
+    {
+        itoa(multi[n][0],str,2);
+        j=3;
+        for(i=strlen(str)-1;i>=0;i--)
+            t1[j--]=int(str[i]-48);
+        for(i=0;i<4;i++)
+            t[i]=A[i];
+        n=convert();
+        itoa(multi[n][2],str,2);
+        j=3;
+        for(i=strlen(str)-1;i>=0;i--)
+            t2[j--]=int(str[i]-48);
+    }
+
+    for(i=0;i<4;i++)
+    {
+        if(t1[i]==t2[i])
+            t[i]=0;
+        else
+            t[i]=1;
+    }
+}
+
+void Encrypt(int P[20])
+{
+    int i, Ark1[20], Ark2[20], Mixcoln[20], C[10] ;
+
+    for(i=0;i<16;i++)
+    {
+        if(P[i]==k1[i])
+            Ark1[i]=0;
+        else
+            Ark1[i]=1;
+    }
+
+    for(i=0;i<8;i++)
+        t[i]=Ark1[i];
+    Subnib(0);
+    for(i=0;i<8;i++)
+        { Ark1[i]=t[i]; t[i]=Ark1[i+8]; }
+    Subnib(0);
+
+    for(i=0;i<4;i++)
+    {
+        Ark1[i+8]=t[i];
+        Ark1[i+12]=Ark1[i+4];
+        Ark1[i+4]=t[i+4];
+    }
+
+    for(i=0;i<4;i++)
+        {C[i]=Ark1[i]; t[i]=Ark1[i+4]; }
+    Mix_column_multi(C,0);
+    for(i=0;i<4;i++)
+        Mixcoln[i]=t[i];
+
+    for(i=0;i<4;i++)
+        {t[i]=Ark1[i]; C[i]=Ark1[i+4]; }
+    Mix_column_multi(C,0);
+    for(i=0;i<4;i++)
+        Mixcoln[i+4]=t[i];
+
+    for(i=0;i<4;i++)
+        {C[i]=Ark1[i+8]; t[i]=Ark1[i+12]; }
+    Mix_column_multi(C,0);
+    for(i=0;i<4;i++)
+        Mixcoln[i+8]=t[i];
+
+    for(i=0;i<4;i++)
+        {t[i]=Ark1[i+8]; C[i]=Ark1[i+12];}
+    Mix_column_multi(C,0);
+    for(i=0;i<4;i++)
+        Mixcoln[i+12]=t[i];
+
+    for(i=0;i<16;i++)
+    {
+        if(Mixcoln[i]==k2[i])
+            Ark2[i]=0;
+        else
+            Ark2[i]=1;
+    }
+
+    for(i=0;i<8;i++)
+        t[i]=Ark2[i];
+    Subnib(0);
+    for(i=0;i<8;i++)
+    {
+        Ark2[i]=t[i];
+        t[i]=Ark2[i+8];
+    }
+    Subnib(0);
+    for(i=0;i<4;i++)
+    {
+        Ark2[i+8]=t[i];
+        Ark2[i+12]=Ark2[i+4];
+        Ark2[i+4]=t[i+4];
+    }
+
+    for(i=0;i<16;i++)
+    {
+        if(Ark2[i]==k3[i])
+            Cipher[i]=0;
+        else
+            Cipher[i]=1;
+    }
+    cout<<endl<<"Cipher Text:    ";
+     for(i=0;i<16;i++)
+        cout<<Cipher[i]<<" ";
+
+}
+
+void Decrypt()
+{
+    int i, Ark2[20], Ark3[20], InMixcoln[20], C[20] ;
+
+    for(i=0;i<16;i++)
+    {
+        if(Cipher[i]==k3[i])
+            Ark3[i]=0;
+        else
+            Ark3[i]=1;
+    }
+    for(i=0;i<4;i++)
+    {
+        t[i]=Ark3[i+12];
+        Ark3[i+12]=Ark3[i+4];
+        Ark3[i+4]=t[i];
+    }
+
+    for(i=0;i<8;i++)
+        t[i]=Ark3[i];
+    Subnib(1);
+    for(i=0;i<8;i++)
+        Ark3[i]=t[i];
+    for(i=0;i<8;i++)
+        t[i]=Ark3[i+8];
+    Subnib(1);
+    for(i=0;i<8;i++)
+        Ark3[i+8]=t[i];
+
+
+    for(i=0;i<16;i++)
+    {
+        if(Ark3[i]==k2[i])
+            Ark2[i]=0;
+        else
+            Ark2[i]=1;
+    }
+
+
+    for(i=0;i<4;i++)
+        {C[i]=Ark2[i]; t[i]=Ark2[i+4]; }
+    Mix_column_multi(C,1);
+    for(i=0;i<4;i++)
+        InMixcoln[i]=t[i];
+
+    for(i=0;i<4;i++)
+        {t[i]=Ark2[i]; C[i]=Ark2[i+4]; }
+    Mix_column_multi(C,1);
+    for(i=0;i<4;i++)
+        InMixcoln[i+4]=t[i];
+
+    for(i=0;i<4;i++)
+        {C[i]=Ark2[i+8]; t[i]=Ark2[i+12]; }
+    Mix_column_multi(C,1);
+    for(i=0;i<4;i++)
+        InMixcoln[i+8]=t[i];
+
+    for(i=0;i<4;i++)
+        {t[i]=Ark2[i+8]; C[i]=Ark2[i+12];}
+    Mix_column_multi(C,1);
+    for(i=0;i<4;i++)
+        InMixcoln[i+12]=t[i];
+
+    for(i=0;i<4;i++)
+    {
+        t[i]=InMixcoln[i+12];
+        InMixcoln[i+12]=InMixcoln[i+4];
+        InMixcoln[i+4]=t[i];
+    }
+
+    for(i=0;i<8;i++)
+        t[i]=InMixcoln[i];
+    Subnib(1);
+    for(i=0;i<8;i++)
+        InMixcoln[i]=t[i];
+    for(i=0;i<8;i++)
+        t[i]=InMixcoln[i+8];
+    Subnib(1);
+    for(i=0;i<8;i++)
+        InMixcoln[i+8]=t[i];
+
+    for(i=0;i<16;i++)
+    {
+        if(InMixcoln[i]==k1[i])
+            C[i]=0;
+        else
+            C[i]=1;
+    }
+    cout<<endl<<"Decrypted Text: ";
+    for(i=0;i<16;i++)
+        cout<<C[i]<<" ";
+
+}
+
+void key_gene(int k[20])
+{
+    int i, t0[10], t1[10], W0[10], W1[10], W2[10], W3[10], W4[10], W5[10];
+    for(i=0;i<8;i++)
+    {
+        W0[i]=k[i];
+        t0[i]=W0[i];
+        W1[i]=k[i+8];
+    }
+    for(i=0;i<4;i++)
+    {
+        t[i+4]=W1[i];
+        t[i]=W1[i+4];
+    }
+    if(t0[0]==1)
+        t0[0]=0;
+    else
+        t0[0]=1;
+    Subnib(0);
+    for(i=0;i<8;i++)
+    {
+        if(t0[i]==t[i])
+            W2[i]=0;
+        else
+            W2[i]=1;
+    }
+    for(i=0;i<8;i++)
+    {
+        if(W1[i]==W2[i])
+            W3[i]=0;
+        else
+            W3[i]=1;
+    }
+    for(int i=0;i<4;i++)
+    {
+        t0[i]=W2[i];
+        t0[i+4]=W2[i];
+        t[i+4]=W3[i];
+        t[i]=W3[i+4];
+    }
+    if(t0[2]==1)
+        t0[2]=0;
+    else
+        t0[2]=1;
+    if(t0[3]==1)
+        t0[3]=0;
+    else
+        t0[3]=1;
+    Subnib(0);
+    for(i=0;i<8;i++)
+    {
+        if(t0[i]==t[i])
+            W4[i]=0;
+        else
+            W4[i]=1;
+    }
+    for(i=0;i<8;i++)
+    {
+        if(W3[i]==W4[i])
+            W5[i]=0;
+        else
+            W5[i]=1;
+    }
+
+    for(i=0;i<8;i++)
+    {
+        k1[i]=W0[i];
+        k1[i+8]=W1[i];
+        k2[i]=W2[i];
+        k2[i+8]=W3[i];
+        k3[i]=W4[i];
+        k3[i+8]=W5[i];
+    }
+
+}
+
+int main()
+{
+    int k[20]={0,1,0,0,1,0,1,0,1,1,1,1,0,1,0,1},A[20]={1,1,0,1,0,1,1,1,0,0,1,0,1,0,0,0};
+
+    //cout<<"Enter the 16-bit Plain Text for Encryption of S-DES: ";
+    //for(int i=0;i<16;i++)
+        //cin>>A[i];
+    //cout<<"Enter the 16-bit key value: ";
+    //for(int i=0;i<=16;i++)
+        //cin>>k[i];
+    cout<<"Plain Text:     ";
+    for(int i=0;i<16;i++)
+        cout<<A[i]<<" ";
+    key_gene(k);
+    Encrypt(A);
+    Decrypt();
+}
